@@ -1,0 +1,3 @@
+[submodule "mINI.c"]
+	path = mINI.c
+	url = https://github.com/andrewgregory/mINI.c.git
