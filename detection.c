@@ -240,7 +240,6 @@ static void config_pins_listening_state(void)
 static void set_pins_enable_read(bool enable)
 {
     pin_set(PINIDX_ROUTE_EN, enable ? 1 : 0);
-    usleep(100);
 }
 
 static void config_pins_read_state(void)
