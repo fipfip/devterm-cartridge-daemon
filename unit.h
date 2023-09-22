@@ -4,8 +4,8 @@
 
 typedef enum
 {
-	UNIT_SCOPE_USER = 0,
-	UNIT_SCOPE_SYSTEM = 1
+    UNIT_SCOPE_USER = 0,
+    UNIT_SCOPE_SYSTEM = 1
 } unit_service_scope_t;
 
 typedef struct
