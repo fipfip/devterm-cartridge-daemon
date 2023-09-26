@@ -7,6 +7,7 @@
 
 #include "detection.h"
 #include "log.h"
+#include "notify.h"
 #include "pinconfig.h"
 #include "unit.h"
 
@@ -14,6 +15,7 @@ static unit_t *p_unit_active = NULL;
 
 static void cart_event(const detection_event_t event, const unsigned cart_id);
 static void cart_unit_load(const char *const p_unit_path);
+static void notify_plugin(unit_t *p_unit);
 
 const detection_config_t s_detcfg = {
     .pin_route_en = PIN_ROUTE_EN, .pin_clock = PIN_GPIO_Y0, .pin_data = PIN_GPIO_Y1, .p_event_listener = cart_event};
@@ -87,6 +89,14 @@ static void unit_print(unit_t *p_unit)
     }
 }
 
+static void notify_plugin(unit_t *p_unit)
+{
+    char msg[255] = {0};
+
+    sprintf(msg, "Inserted '%s' cartridge", p_unit->p_unit_name);
+    notify_send_to_all("DevTerm Cartridge", msg, NULL);
+}
+
 static void cart_unit_load(const char *const p_unit_path)
 {
     unit_t *p_unit = NULL;
@@ -97,7 +107,10 @@ static void cart_unit_load(const char *const p_unit_path)
     if (unit_parse_rc == UNIT_PARSE_OKAY)
     {
         unit_print(p_unit);
+
         p_unit_active = p_unit;
+
+        notify_plugin(p_unit_active);
         unit_activate(p_unit_active);
     }
     else
@@ -111,7 +124,8 @@ int main()
     setup();
     LOG_INF("%s", "ExtCart daemon started.");
     /*debug();*/
-
+    cart_event(DETECTION_EVENT_INSERTED, 0x01);
+    cart_event(DETECTION_EVENT_REMOVED, 0x01);
     while (1)
     {
         loop();
