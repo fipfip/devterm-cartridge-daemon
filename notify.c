@@ -26,7 +26,7 @@ int notify_send_to_all(const char *const p_title, const char *const p_text, cons
     int uid = 0;
     int gid = 0;
     int rc = 0;
-
+    setutent();
     data = getutent();
     while (data != NULL)
     {

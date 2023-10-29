@@ -245,7 +245,7 @@ static void set_pins_enable_read(bool enable)
 static void config_pins_read_state(void)
 {
     pin_config_output(PINIDX_ROUTE_EN, 0);
-    pin_config_output(PINIDX_CLOCK, 0);
+    pin_config_output(PINIDX_CLOCK, 1);
     pin_config_input(PINIDX_DATA);
 }
 
@@ -268,6 +268,7 @@ static bool pulse_read(bool *p_bit)
     {
     case DETECTION_READSTATE_IDLE:
         s_readstate = DETECTION_READSTATE_START;
+        pin_set(PINIDX_CLOCK, 1);
     case DETECTION_READSTATE_START:
         pin_set(PINIDX_CLOCK, 1);
         s_pulse_time_start = instant_now;
@@ -276,6 +277,8 @@ static bool pulse_read(bool *p_bit)
     case DETECTION_READSTATE_WAITHIGH:
         if ((instant_now - s_pulse_time_start) > 100)
         {
+            *p_bit = pin_get(PINIDX_DATA);
+            bit_set = true;
             pin_set(PINIDX_CLOCK, 0);
             s_pulse_time_start = instant_now;
             s_readstate = DETECTION_READSTATE_WAITLOW;
@@ -284,8 +287,6 @@ static bool pulse_read(bool *p_bit)
     case DETECTION_READSTATE_WAITLOW:
         if ((instant_now - s_pulse_time_start) > 100)
         {
-            *p_bit = pin_get(PINIDX_DATA);
-            bit_set = true;
             pin_set(PINIDX_CLOCK, 1);
             s_readstate = DETECTION_READSTATE_IDLE;
         }

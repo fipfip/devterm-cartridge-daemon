@@ -16,6 +16,7 @@ static unit_t *p_unit_active = NULL;
 static void cart_event(const detection_event_t event, const unsigned cart_id);
 static void cart_unit_load(const char *const p_unit_path);
 static void notify_plugin(unit_t *p_unit);
+static void notify_notfound(unsigned int number);
 
 const detection_config_t s_detcfg = {
     .pin_route_en = PIN_ROUTE_EN, .pin_clock = PIN_GPIO_Y0, .pin_data = PIN_GPIO_Y1, .p_event_listener = cart_event};
@@ -58,6 +59,7 @@ static void cart_event(const detection_event_t event, const unsigned cart_id)
             break;
         case UNIT_FIND_NOTFOUND:
             LOG_ERR("Cartridge #%04X no unit file found", cart_id);
+            notify_notfound(cart_id);
             break;
         }
         break;
@@ -68,6 +70,7 @@ static void cart_event(const detection_event_t event, const unsigned cart_id)
         {
             unit_deactive(p_unit_active);
             unit_destroy(p_unit_active);
+            p_unit_active = NULL;
         }
         break;
 
@@ -94,6 +97,17 @@ static void notify_plugin(unit_t *p_unit)
     char msg[255] = {0};
 
     sprintf(msg, "Inserted '%s' cartridge", p_unit->p_unit_name);
+    notify_send_to_all("DevTerm Cartridge", msg, NULL);
+}
+
+static void notify_notfound(unsigned int number)
+{
+    char msg[255] = {0};
+
+    sprintf(msg,
+            "Could not find description for cartridge no. '%X'.\n"
+            "Try to reseat cartridge if software is installed.",
+            number);
     notify_send_to_all("DevTerm Cartridge", msg, NULL);
 }
 
@@ -124,8 +138,6 @@ int main()
     setup();
     LOG_INF("%s", "ExtCart daemon started.");
     /*debug();*/
-    cart_event(DETECTION_EVENT_INSERTED, 0x01);
-    cart_event(DETECTION_EVENT_REMOVED, 0x01);
     while (1)
     {
         loop();
