@@ -10,7 +10,7 @@ INCLUDES = -I./mINI.c \
 	   -I/usr/include/libpng16 \
 	   -I/usr/include/libmount \
 	   -I/usr/include/blkid
-LIBS = -lwiringPi -lm -lpthread -lrt -lgpiod -lsystemd \
+LIBS = -lm -lpthread -lrt -lgpiod -lsystemd \
        -lnotify -lgdk_pixbuf-2.0 -lgio-2.0 -lgobject-2.0 -lglib-2.0
 
 MAIN = cartridged.elf
