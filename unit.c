@@ -223,21 +223,12 @@ unit_parse_result_t unit_parse(unit_t **pp_unit, const char *const p_path)
     {
         if (!p_mini->key)
         {
-            printf("[%s]\n", p_mini->section);
             parse_rc = unit_parse_section(p_mini, p_unit, p_mini->section, services, &service_cnt);
-        }
-        else if (!p_mini->value)
-        {
-            printf("%s\n", p_mini->key);
-        }
-        else
-        {
-            printf("%s = %s\n", p_mini->key, p_mini->value);
         }
     }
     if (!p_mini->eof)
     {
-        fprintf(stderr, "error reading '%s' (%s)\n", p_path, strerror(errno));
+        LOG_ERR("Error reading configuration at '%s' (error '%s')", p_path, strerror(errno));
         parse_rc = UNIT_PARSE_FILE_ERR;
     }
     mini_free(p_mini);
@@ -286,7 +277,7 @@ void unit_activate(unit_t *p_unit)
             unit_systemd_servcall("StartUnit", p_unit->services.elem[i].p_sdunit);
             break;
         default:
-            LOG_WNG("Unsupported scope=%d for service '%s' of '%s', ignoring.", p_unit->services.elem[i].sdscope,
+            LOG_WRN("Unsupported scope=%d for service '%s' of '%s', ignoring.", p_unit->services.elem[i].sdscope,
                     p_unit->services.elem[i].p_name, p_unit->p_unit_name);
         }
     }
@@ -304,7 +295,7 @@ void unit_deactive(unit_t *p_unit)
             unit_systemd_servcall("StopUnit", p_unit->services.elem[i].p_sdunit);
             break;
         default:
-            LOG_WNG("Unsupported scope=%d for service '%s' of '%s', ignoring.", p_unit->services.elem[i].sdscope,
+            LOG_WRN("Unsupported scope=%d for service '%s' of '%s', ignoring.", p_unit->services.elem[i].sdscope,
                     p_unit->services.elem[i].p_name, p_unit->p_unit_name);
         }
     }

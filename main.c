@@ -3,14 +3,21 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
+#include "config.h"
 #include "detection.h"
 #include "log.h"
 #include "notify.h"
 #include "pinconfig.h"
 #include "unit.h"
 
+#define CONFIG_FILE "/etc/cartridged/config.ini"
+#define DEFAULT_CARTDB_PATH "/etc/cartridged/cartdb/"
+#define DEFAULT_NOTIFY true
+
+static config_t config = {0};
 static unit_t *p_unit_active = NULL;
 
 static void cart_event(const detection_event_t event, const unsigned cart_id);
@@ -28,9 +35,24 @@ static void destroy()
 
 static void setup()
 {
+    int rc = 0;
     atexit(destroy);
     // Initialize detection module
     detection_init(&s_detcfg);
+    // read in configuration
+    LOG_INF("Reading configuration from '%s'", CONFIG_FILE);
+    rc = config_load(CONFIG_FILE, &config);
+    if (rc != 0)
+    {
+        LOG_WRN("Failed to read configuration at '%s', using fallback values", CONFIG_FILE);
+        strncpy(config.cartdb_path, DEFAULT_CARTDB_PATH, sizeof(config.cartdb_path));
+        config.notification_enabled = DEFAULT_NOTIFY;
+    }
+    else
+    {
+        LOG_INF("Configuration:\ndb_path=%s\nnotifications=%s", config.cartdb_path,
+                config.notification_enabled ? "yes" : "no");
+    }
 }
 
 void loop()
@@ -48,7 +70,7 @@ static void cart_event(const detection_event_t event, const unsigned cart_id)
     {
     case DETECTION_EVENT_INSERTED:
         LOG_INF("Cartridge inserted! (id=%u)", cart_id);
-        ufind_res = unit_find(cart_id, "./cartdb", unit_file);
+        ufind_res = unit_find(cart_id, config.cartdb_path, unit_file);
         switch (ufind_res)
         {
         case UNIT_FIND_SUCCESS:
@@ -96,6 +118,9 @@ static void notify_plugin(unit_t *p_unit)
 {
     char msg[255] = {0};
 
+    if (!config.notification_enabled)
+        return;
+
     sprintf(msg, "Inserted '%s' cartridge", p_unit->p_unit_name);
     notify_send_to_all("DevTerm Cartridge", msg, NULL);
 }
@@ -103,6 +128,9 @@ static void notify_plugin(unit_t *p_unit)
 static void notify_notfound(unsigned int number)
 {
     char msg[255] = {0};
+
+    if (!config.notification_enabled)
+        return;
 
     sprintf(msg,
             "Could not find description for cartridge no. '%X'.\n"

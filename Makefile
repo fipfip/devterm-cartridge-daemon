@@ -13,12 +13,24 @@ INCLUDES = -I./mINI.c \
 LIBS = -lwiringPi -lm -lpthread -lrt -lgpiod -lsystemd \
        -lnotify -lgdk_pixbuf-2.0 -lgio-2.0 -lgobject-2.0 -lglib-2.0
 
-MAIN = devterm_extcart_daemon.elf
+MAIN = cartridged.elf
 
-SRCS = main.c log.c detection.c unit.c notify.c mINI.c/mini.c
+SRCS = main.c log.c detection.c unit.c notify.c config.c mINI.c/mini.c
 OBJS = $(SRCS:.c=.o)
 
-.PHONY: depend clean
+BINDIR ?= /usr/local/bin
+
+.PHONY: depend clean install
+
+install:
+	@echo "Installing binary..."
+	@install -m 557 $(MAIN) $(BINDIR)
+	@echo "Installing systemd service..."
+	@mkdir -p /etc/cartridged/
+	@install -m 644 ./etc/cartridged/config.ini /etc/cartridged/
+	@install -m 644 ./etc/systemd/system/cartridged.service /etc/systemd/system/
+	@echo "Reloading systemd..."
+	@systemctl daemon-reload
 
 all:    $(MAIN)
 	@echo compile $(MAIN)
