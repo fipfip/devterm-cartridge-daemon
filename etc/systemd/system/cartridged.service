@@ -1,0 +1,14 @@
+[Unit]
+Description=DevTerm Cartridge Daemon
+
+[Service]
+Type=simple
+StandardOutput=file:/tmp/cartridged.log
+StandardError=file:/tmp/cartridged.err.log
+ExecStart=/usr/local/bin/cartridged.elf
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
+
