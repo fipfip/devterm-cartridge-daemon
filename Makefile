@@ -3,15 +3,26 @@ CC = gcc
 CFLAGS  = -O0 -g -Wall -pthread
 LDFLAGS =
 INCLUDES = -I./mINI.c \
-	   -I/usr/include/gdk-pixbuf-2.0 \
-	   -I/usr/include/glib-2.0 \
-	   -I/usr/lib/glib-2.0/include \
-	   -I/usr/include/sysprof-4 \
-	   -I/usr/include/libpng16 \
-	   -I/usr/include/libmount \
-	   -I/usr/include/blkid
-LIBS = -lm -lpthread -lrt -lgpiod -lsystemd \
-       -lnotify -lgdk_pixbuf-2.0 -lgio-2.0 -lgobject-2.0 -lglib-2.0
+	   $(shell pkg-config --cflags \
+	     gdk-pixbuf-2.0 \
+	     glib-2.0 \
+	     libpng16 \
+	     mount \
+	     blkid \
+	     libgpiod \
+	     libsystemd \
+	     libnotify \
+	   )
+LIBS = $(shell pkg-config --libs \
+	     gdk-pixbuf-2.0 \
+	     glib-2.0 \
+	     libpng16 \
+	     mount \
+	     blkid \
+	     libgpiod \
+	     libsystemd \
+	     libnotify \
+	   )
 
 MAIN = cartridged.elf
 
@@ -22,6 +33,9 @@ BINDIR ?= /usr/local/bin
 
 .PHONY: depend clean install
 
+all:    $(MAIN)
+	@echo compile $(MAIN)
+
 install:
 	@echo "Installing binary..."
 	@install -m 557 $(MAIN) $(BINDIR)
@@ -31,9 +45,6 @@ install:
 	@install -m 644 ./etc/systemd/system/cartridged.service /etc/systemd/system/
 	@echo "Reloading systemd..."
 	@systemctl daemon-reload
-
-all:    $(MAIN)
-	@echo compile $(MAIN)
 
 $(MAIN): $(OBJS) 
 	$(CC) $(CFLAGS) $(INCLUDES) -o $(MAIN) $(OBJS) $(LFLAGS) $(LIBS)
